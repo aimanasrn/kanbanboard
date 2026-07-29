@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: kanban-board-app:latest
+    container_name: kanban_app
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    environment:
+      APP_NAME: "KanbanFlow"
+      APP_ENV: "production"
+      APP_DEBUG: "false"
+      APP_URL: "http://localhost:8000"
+      DB_CONNECTION: "sqlite"
+    volumes:
+      - storage_data:/var/www/html/storage
+
+volumes:
+  storage_data:

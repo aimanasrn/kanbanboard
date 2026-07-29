@@ -1,0 +1,139 @@
+@import 'tailwindcss';
+
+@variant dark (&:where(.dark, .dark *));
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
+
+@theme {
+    --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    
+    --color-soft-primary: #6E63D9;
+    --color-soft-sidebar: #6658C8;
+    --color-soft-lavender: #A98BEF;
+    --color-soft-pink: #E98AC9;
+    --color-soft-bg: #F8F5FF;
+    --color-soft-card: #FFFFFF;
+    --color-soft-border: #ECE8F7;
+    --color-soft-text-main: #2F2F45;
+    --color-soft-text-sub: #7A7A92;
+    --color-soft-text-muted: #B3B3C5;
+    
+    --color-soft-success: #72D49A;
+    --color-soft-warning: #FFC857;
+    --color-soft-danger: #FF6B81;
+}
+
+/* Skeleton Loading Shimmer Effect */
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton-shimmer {
+    background: linear-gradient(90deg, rgba(236, 232, 247, 0.4) 25%, rgba(217, 210, 248, 0.8) 50%, rgba(236, 232, 247, 0.4) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite linear;
+}
+
+.dark .skeleton-shimmer {
+    background: linear-gradient(90deg, rgba(37, 32, 61, 0.4) 25%, rgba(53, 47, 82, 0.8) 50%, rgba(37, 32, 61, 0.4) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite linear;
+}
+
+/* Card Nav Header (ReactBits Aesthetic - Light & Dark Mode) */
+.card-nav-header {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 15px 35px rgba(86, 72, 163, 0.08), 0 5px 15px rgba(0, 0, 0, 0.02);
+    border: 1px solid #ECE8F7;
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dark .card-nav-header {
+    background: rgba(27, 24, 46, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    border: 1px solid #2A2645;
+}
+
+.card-nav-item {
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-nav-item:hover {
+    transform: translateY(-2px);
+}
+
+/* Custom Soft UI Shadow System */
+.shadow-soft-card {
+    box-shadow: 0 10px 30px rgba(86, 72, 163, 0.08);
+}
+
+.dark .shadow-soft-card {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.shadow-card-hover {
+    box-shadow: 0 18px 40px rgba(86, 72, 163, 0.14);
+}
+
+.dark .shadow-card-hover {
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+}
+
+.shadow-button {
+    box-shadow: 0 8px 20px rgba(110, 99, 217, 0.3);
+}
+
+/* Custom Scrollbars */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #D9D2F8;
+    border-radius: 9999px;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #352F52;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #A98BEF;
+}
+
+/* SortableJS Ghost & Dragging States */
+.sortable-ghost {
+    opacity: 0.35 !important;
+    background-color: rgba(110, 99, 217, 0.1) !important;
+    border: 2px dashed #6E63D9 !important;
+    border-radius: 20px !important;
+    transform: scale(0.98);
+}
+
+.sortable-chosen {
+    cursor: grabbing !important;
+}
+
+.sortable-drag {
+    opacity: 0.95 !important;
+    transform: rotate(2deg) scale(1.02);
+    box-shadow: 0 25px 50px -12px rgba(110, 99, 217, 0.3) !important;
+    border-color: #6E63D9 !important;
+    border-radius: 20px !important;
+}
