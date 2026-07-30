@@ -23,6 +23,10 @@ class Task extends Model
         'created_by',
         'completed_at',
         'is_archived',
+        'estimated_hours',
+        'actual_hours',
+        'timer_started_at',
+        'recurring_frequency',
     ];
 
     protected function casts(): array
@@ -32,6 +36,9 @@ class Task extends Model
             'completed_at' => 'datetime',
             'is_archived' => 'boolean',
             'position' => 'integer',
+            'estimated_hours' => 'float',
+            'actual_hours' => 'float',
+            'timer_started_at' => 'datetime',
         ];
     }
 
@@ -73,6 +80,19 @@ class Task extends Model
     public function isOverdue(): bool
     {
         return $this->due_date && $this->due_date->isPast() && $this->status !== 'done';
+    }
+
+    public function isTimerRunning(): bool
+    {
+        return !is_null($this->timer_started_at);
+    }
+
+    public function getElapsedTimeSeconds(): int
+    {
+        if (!$this->timer_started_at) {
+            return 0;
+        }
+        return (int) now()->diffInSeconds($this->timer_started_at);
     }
 
     public function getChecklistProgressAttribute(): array

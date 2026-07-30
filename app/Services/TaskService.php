@@ -56,11 +56,23 @@ class TaskService
 
                 if ($newStatus === 'done') {
                     $updateData['completed_at'] = now();
+                    // Stop timer if running
+                    if ($task->timer_started_at) {
+                        $seconds = now()->diffInSeconds($task->timer_started_at);
+                        $addedHours = round($seconds / 3600, 2);
+                        $updateData['actual_hours'] = ($task->actual_hours ?? 0) + $addedHours;
+                        $updateData['timer_started_at'] = null;
+                    }
                 } else {
                     $updateData['completed_at'] = null;
                 }
 
                 $task->update($updateData);
+
+                // Handle Recurring Task creation if task completed
+                if ($newStatus === 'done' && $task->recurring_frequency && $oldStatus !== 'done') {
+                    $this->createNextRecurringTask($task, $userId);
+                }
 
                 // Log activity
                 $statusLabels = [
@@ -130,6 +142,106 @@ class TaskService
     }
 
     /**
+     * Toggles live working timer on a task.
+     */
+    public function toggleTimer(Task $task, ?int $userId = null): Task
+    {
+        return DB::transaction(function () use ($task, $userId) {
+            if ($task->timer_started_at) {
+                // Stop timer & accumulate actual_hours
+                $seconds = now()->diffInSeconds($task->timer_started_at);
+                $addedHours = round($seconds / 3600, 2);
+                $newActualHours = ($task->actual_hours ?? 0) + $addedHours;
+
+                $task->update([
+                    'timer_started_at' => null,
+                    'actual_hours' => $newActualHours,
+                ]);
+
+                ActivityLog::create([
+                    'project_id' => $task->project_id,
+                    'user_id' => $userId ?? auth()->id() ?? $task->created_by,
+                    'task_id' => $task->id,
+                    'action' => 'updated',
+                    'description' => "Stopped timer on \"{$task->title}\" (Added {$addedHours} hrs)",
+                ]);
+            } else {
+                // Start timer
+                $task->update([
+                    'timer_started_at' => now(),
+                ]);
+
+                ActivityLog::create([
+                    'project_id' => $task->project_id,
+                    'user_id' => $userId ?? auth()->id() ?? $task->created_by,
+                    'task_id' => $task->id,
+                    'action' => 'updated',
+                    'description' => "Started working timer on \"{$task->title}\"",
+                ]);
+            }
+
+            return $task->fresh();
+        });
+    }
+
+    /**
+     * Creates next recurring task instance based on frequency.
+     */
+    protected function createNextRecurringTask(Task $task, ?int $userId = null): Task
+    {
+        $nextDueDate = match ($task->recurring_frequency) {
+            'daily'   => now()->addDay(),
+            'weekly'  => now()->addWeek(),
+            'monthly' => now()->addMonth(),
+            default   => now()->addDay(),
+        };
+
+        $maxPos = Task::where('project_id', $task->project_id)
+            ->where('status', 'todo')
+            ->max('position') ?? 0;
+
+        $nextTask = Task::create([
+            'project_id'          => $task->project_id,
+            'title'               => $task->title,
+            'description'         => $task->description,
+            'status'              => 'todo',
+            'position'            => $maxPos + 1,
+            'priority'            => $task->priority,
+            'due_date'            => $nextDueDate,
+            'assigned_to'         => $task->assigned_to,
+            'created_by'          => $userId ?? $task->created_by,
+            'estimated_hours'     => $task->estimated_hours,
+            'actual_hours'        => null,
+            'recurring_frequency' => $task->recurring_frequency,
+        ]);
+
+        foreach ($task->labels as $label) {
+            $nextTask->labels()->create([
+                'label' => $label->label,
+                'color' => $label->color,
+            ]);
+        }
+
+        foreach ($task->checklists as $checklist) {
+            $nextTask->checklists()->create([
+                'title'     => $checklist->title,
+                'completed' => false,
+                'position'  => $checklist->position,
+            ]);
+        }
+
+        ActivityLog::create([
+            'project_id'  => $task->project_id,
+            'user_id'     => $userId ?? $task->created_by,
+            'task_id'     => $nextTask->id,
+            'action'      => 'created',
+            'description' => "Auto-scheduled next " . ucfirst($task->recurring_frequency) . " recurring task for \"{$task->title}\"",
+        ]);
+
+        return $nextTask;
+    }
+
+    /**
      * Calculates project statistics.
      */
     public function calculateProjectStats(Project $project): array
@@ -145,6 +257,8 @@ class TaskService
                 'urgent' => 0,
                 'overdue' => 0,
                 'completion_rate' => 0,
+                'total_estimated_hours' => 0,
+                'total_actual_hours' => 0,
             ];
         }
 
@@ -153,6 +267,8 @@ class TaskService
         $urgent = $tasks->where('priority', 'urgent')->count();
         $overdue = $tasks->filter(fn($t) => $t->isOverdue())->count();
         $completionRate = round(($completed / $total) * 100);
+        $totalEstimated = $tasks->sum('estimated_hours');
+        $totalActual = $tasks->sum('actual_hours');
 
         return [
             'total' => $total,
@@ -161,6 +277,8 @@ class TaskService
             'urgent' => $urgent,
             'overdue' => $overdue,
             'completion_rate' => $completionRate,
+            'total_estimated_hours' => round($totalEstimated, 1),
+            'total_actual_hours' => round($totalActual, 1),
         ];
     }
 }

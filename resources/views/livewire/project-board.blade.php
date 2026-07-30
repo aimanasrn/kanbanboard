@@ -6,17 +6,17 @@
         <!-- Left: Logo & Floating Card Navigation Links -->
         <div class="flex items-center gap-6">
             <!-- Brand Logo Card -->
-            <div class="flex items-center gap-2.5 pl-2">
+            <a href="{{ route('projects.index') }}" class="flex items-center gap-2.5 pl-2 group" title="All Projects">
                 <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#6E63D9] via-[#8675E6] to-[#E98AC9] p-0.5 shadow-button">
                     <div class="w-full h-full bg-[#6658C8] rounded-[14px] flex items-center justify-center text-white font-black text-lg">
                         K
                     </div>
                 </div>
                 <div>
-                    <span class="text-base font-extrabold tracking-tight text-[#2F2F45] dark:text-white block leading-none">KanbanFlow</span>
-                    <span class="text-[10px] font-semibold text-[#7A7A92] dark:text-[#A8A3C7]">Project Workspace</span>
+                    <span class="text-base font-extrabold tracking-tight text-[#2F2F45] dark:text-white block leading-none group-hover:text-[#6E63D9] transition-colors">KanbanFlow</span>
+                    <span class="text-[10px] font-semibold text-[#7A7A92] dark:text-[#A8A3C7]">← All Projects</span>
                 </div>
-            </div>
+            </a>
 
             <!-- Card Navigation Links (ReactBits Card Nav Tabs) -->
             <nav class="hidden lg:flex items-center gap-2">
@@ -35,6 +35,36 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                     <span>Schedule / Calendar</span>
                 </button>
+
+                {{-- Project Switcher Dropdown --}}
+                @php $allProjects = \App\Models\Project::orderBy('name')->get(); @endphp
+                @if($allProjects->count() > 1)
+                    <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                        <button @click="open = !open"
+                                class="card-nav-item px-4 py-2 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all bg-white dark:bg-[#25203D] text-[#2F2F45] dark:text-[#F2EEFF] border border-[#ECE8F7] dark:border-[#352F52] hover:bg-[#6E63D9]/10 hover:text-[#6E63D9]">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+                            <span>Switch Project</span>
+                            <svg class="w-3 h-3 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div x-show="open"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 -translate-y-2"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             class="absolute top-full left-0 mt-2 w-56 rounded-2xl bg-white dark:bg-[#1C1830] border border-[#ECE8F7] dark:border-[#2A2545] shadow-xl z-50 overflow-hidden py-1">
+                            @foreach($allProjects as $proj)
+                                <button wire:click="switchProject({{ $proj->id }})" @click="open = false"
+                                        class="w-full text-left px-4 py-2.5 text-xs font-bold flex items-center gap-2.5 transition-colors
+                                               {{ $proj->id === $projectId ? 'text-[#6E63D9] bg-[#6E63D9]/08' : 'text-[#2F2F45] dark:text-[#F2EEFF] hover:bg-[#F8F5FF] dark:hover:bg-[#25203D]' }}">
+                                    <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background: {{ $proj->color ?? '#6E63D9' }};"></span>
+                                    <span class="truncate">{{ $proj->name }}</span>
+                                    @if($proj->id === $projectId)
+                                        <svg class="w-3 h-3 ml-auto shrink-0 text-[#6E63D9]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    @endif
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </nav>
         </div>
 
@@ -62,6 +92,30 @@
             >
                 <span class="text-sm">🤖</span>
                 <span class="hidden xl:inline">AI Standup</span>
+            </button>
+
+            <!-- Visual Analytics Button -->
+            <button 
+                wire:click="$set('showAnalyticsModal', true)" 
+                class="px-3.5 py-2 rounded-2xl bg-white dark:bg-[#25203D] border border-[#ECE8F7] dark:border-[#352F52] hover:border-[#6E63D9] text-[#2F2F45] dark:text-white font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-xs"
+                title="Open Visual Project Analytics"
+            >
+                <span class="text-sm">📊</span>
+                <span class="hidden xl:inline">Analytics</span>
+            </button>
+
+            <!-- Team Members Button -->
+            <button 
+                wire:click="$set('showTeamModal', true)"
+                class="px-3 py-1.5 rounded-2xl bg-white dark:bg-[#25203D] border border-[#ECE8F7] dark:border-[#352F52] hover:border-[#6E63D9] text-[#2F2F45] dark:text-white font-bold text-xs flex items-center gap-2 transition-all shadow-xs"
+                title="Manage Project Team Members"
+            >
+                <div class="flex -space-x-1.5 overflow-hidden">
+                    @foreach($project->members->take(3) as $m)
+                        <img src="{{ $m->avatar_url }}" class="inline-block h-5 w-5 rounded-full ring-1 ring-white dark:ring-[#1C1830]" alt="">
+                    @endforeach
+                </div>
+                <span>Team ({{ $project->members->count() + ($project->created_by && !$project->members->contains($project->created_by) ? 1 : 0) }})</span>
             </button>
 
             <!-- Keyboard Shortcuts Button -->
@@ -141,7 +195,12 @@
     <div class="px-8 pt-4 pb-3 flex items-center justify-between gap-4 shrink-0">
         <div>
             <h1 class="text-xl font-extrabold text-[#2F2F45] dark:text-white tracking-tight">{{ $project->name }}</h1>
-            <p class="text-xs text-[#7A7A92] dark:text-[#A8A3C7] mt-0.5 font-medium">{{ $stats['completion_rate'] }}% Completed • {{ $stats['total'] }} Total Tasks</p>
+            <p class="text-xs text-[#7A7A92] dark:text-[#A8A3C7] mt-0.5 font-medium">
+                {{ $stats['completion_rate'] }}% Completed • {{ $stats['total'] }} Tasks 
+                @if(($stats['total_estimated_hours'] ?? 0) > 0 || ($stats['total_actual_hours'] ?? 0) > 0)
+                    • ⏱️ <span class="font-bold text-[#6E63D9] dark:text-[#A98BEF]">{{ $stats['total_actual_hours'] ?? 0 }}h</span> / {{ $stats['total_estimated_hours'] ?? 0 }}h Spent
+                @endif
+            </p>
         </div>
 
         <div class="flex items-center gap-3 overflow-x-auto custom-scrollbar py-1">
@@ -214,11 +273,11 @@
             ], key('kanban-grid-'.$projectId))
         </main>
     @else
-        <!-- PROFESSIONAL SOFT UI CALENDAR VIEW -->
+        <!-- PROFESSIONAL SOFT UI CALENDAR & SCHEDULE VIEW -->
         <main class="flex-1 overflow-y-auto px-8 pb-6 custom-scrollbar space-y-4 relative">
             
-            <!-- CALENDAR SKELETON LAZY LOADING OVERLAY -->
-            <div wire:loading.delay.shortest wire:target="prevCalendarMonth, nextCalendarMonth, todayCalendarMonth, setViewMode" class="absolute inset-x-8 inset-y-0 z-20 bg-white/80 dark:bg-[#1B182E]/80 backdrop-blur-xs rounded-[24px] p-6 space-y-4">
+            <!-- CALENDAR & SCHEDULE SKELETON LAZY LOADING OVERLAY -->
+            <div wire:loading.delay.shortest wire:target="prevCalendarMonth, nextCalendarMonth, todayCalendarMonth, setViewMode, calendarSubView, search, priorityFilter, assigneeFilter, dueDateFilter, labelFilter, switchProject" class="absolute inset-x-8 inset-y-0 z-30 bg-white/90 dark:bg-[#1B182E]/90 backdrop-blur-xs rounded-[24px] p-6 space-y-4">
                 <div class="flex items-center justify-between pb-4 border-b border-[#ECE8F7] dark:border-[#2A2645]">
                     <div class="h-6 w-36 rounded-lg skeleton-shimmer"></div>
                     <div class="h-8 w-48 rounded-full skeleton-shimmer"></div>
@@ -252,7 +311,7 @@
                     <div class="flex items-center gap-3">
                         <!-- Navigation Buttons -->
                         <div class="flex items-center gap-1 bg-[#F8F5FF] dark:bg-[#25203D] p-1 rounded-full border border-[#ECE8F7] dark:border-[#352F52]">
-                            <button wire:click="prevCalendarMonth" class="p-1.5 rounded-full hover:bg-white dark:hover:bg-slate-700 text-[#6E63D9] transition-all">
+                            <button wire:click="prevCalendarMonth" class="p-1.5 rounded-full hover:bg-white dark:hover:bg-slate-700 text-[#6E63D9] transition-all" title="Previous Month">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                             </button>
 
@@ -260,7 +319,7 @@
                                 Today
                             </button>
 
-                            <button wire:click="nextCalendarMonth" class="p-1.5 rounded-full hover:bg-white dark:hover:bg-slate-700 text-[#6E63D9] transition-all">
+                            <button wire:click="nextCalendarMonth" class="p-1.5 rounded-full hover:bg-white dark:hover:bg-slate-700 text-[#6E63D9] transition-all" title="Next Month">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                             </button>
                         </div>
@@ -323,15 +382,17 @@
                                             @php
                                                 $chipColor = match($t->priority) {
                                                     'urgent' => 'bg-[#FF6B81]/15 text-[#FF6B81] border-[#FF6B81]/30',
-                                                    'high' => 'bg-[#6E63D9]/15 text-[#6E63D9] border-[#6E63D9]/30',
+                                                    'high' => 'bg-amber-500/15 text-amber-600 border-amber-500/30',
                                                     'medium' => 'bg-blue-500/15 text-blue-600 border-blue-500/30',
-                                                    default => 'bg-[#72D49A]/20 text-[#2AA857] border-[#72D49A]/40',
+                                                    'low' => 'bg-slate-100 dark:bg-slate-800 text-slate-600 border-slate-200',
+                                                    default => 'bg-[#6E63D9]/10 text-[#6E63D9]',
                                                 };
                                             @endphp
                                             <div 
-                                                wire:click="openTaskModal({{ $t->id }})" 
-                                                class="p-1.5 rounded-xl border text-[11px] font-extrabold truncate flex items-center justify-between gap-1 cursor-pointer hover:-translate-y-0.5 transition-all shadow-xs {{ $chipColor }}"
-                                                title="{{ $t->title }} ({{ strtoupper($t->status) }})"
+                                                wire:click="openTaskModal({{ $t->id }})"
+                                                wire:loading.class="animate-pulse opacity-50"
+                                                class="px-2 py-1 rounded-lg text-[10px] font-bold border truncate flex items-center justify-between cursor-pointer hover:scale-102 transition-all shadow-2xs {{ $chipColor }}"
+                                                title="{{ $t->title }}"
                                             >
                                                 <span class="truncate">{{ $t->title }}</span>
                                                 @if($t->assignee)
@@ -358,7 +419,11 @@
                                     default => 'bg-slate-100 text-slate-700',
                                 };
                             @endphp
-                            <div wire:click="openTaskModal({{ $t->id }})" class="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-[#25203D] border border-[#ECE8F7] dark:border-[#352F52] hover:border-[#6E63D9] hover:shadow-card-hover transition-all duration-200 cursor-pointer shadow-xs">
+                            <div 
+                                wire:click="openTaskModal({{ $t->id }})" 
+                                wire:loading.class="animate-pulse opacity-50"
+                                class="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-[#25203D] border border-[#ECE8F7] dark:border-[#352F52] hover:border-[#6E63D9] hover:shadow-card-hover transition-all duration-200 cursor-pointer shadow-xs"
+                            >
                                 <div class="flex items-center gap-4 flex-1 min-w-0 pr-4">
                                     <span class="px-3 py-1 rounded-full text-[11px] font-extrabold shrink-0 {{ $statusColor }}">
                                         {{ strtoupper(str_replace('_', ' ', $t->status)) }}
@@ -370,6 +435,12 @@
                                 </div>
 
                                 <div class="flex items-center gap-6 shrink-0">
+                                    @if($t->estimated_hours || $t->actual_hours)
+                                        <div class="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-[#6E63D9]/10 text-[#6E63D9]">
+                                            ⏱️ {{ $t->actual_hours ?? 0 }}h / {{ $t->estimated_hours ?? 0 }}h
+                                        </div>
+                                    @endif
+
                                     <x-priority-badge :priority="$t->priority" />
 
                                     <div class="text-right text-xs">
@@ -413,115 +484,85 @@
                             🤖
                         </div>
                         <div>
-                            <h3 class="text-base font-extrabold text-[#2F2F45] dark:text-white">AI Daily Standup Report</h3>
-                            <p class="text-xs text-[#7A7A92] dark:text-[#A8A3C7]">Generated team progress & bottleneck insights.</p>
+                            <h3 class="text-base font-extrabold text-[#2F2F45] dark:text-white">AI Standup Summary</h3>
+                            <p class="text-xs text-[#7A7A92]">Automated health check & bottleneck advisor.</p>
                         </div>
                     </div>
-                    <button wire:click="$set('showAiStandupModal', false)" class="p-1 text-[#7A7A92] hover:text-[#2F2F45]">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <button wire:click="$set('showAiStandupModal', false)" class="p-1.5 rounded-full text-[#7A7A92] hover:bg-[#ECE8F7]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
 
-                <!-- Health Index -->
-                <div class="p-4 rounded-2xl bg-[#6E63D9]/10 flex items-center justify-between">
-                    <div>
-                        <span class="text-xs font-bold text-[#6E63D9]">Project Health Score</span>
-                        <h4 class="text-2xl font-black text-[#6E63D9] mt-0.5">{{ $aiSummary['health_score'] }}% On Track</h4>
+                <!-- Health Score Progress -->
+                <div class="bg-[#F8F5FF] dark:bg-[#25203D] p-4 rounded-2xl border border-[#ECE8F7] dark:border-[#352F52] space-y-2">
+                    <div class="flex justify-between items-center text-xs font-bold">
+                        <span class="text-[#2F2F45] dark:text-white">Project Sprint Health</span>
+                        <span class="text-[#6E63D9] font-extrabold text-sm">{{ $aiSummary['health_score'] }}%</span>
                     </div>
-                    <div class="w-12 h-12 rounded-2xl bg-[#6E63D9] text-white font-black flex items-center justify-center text-lg shadow-button">
-                        ✓
+                    <div class="w-full h-2 bg-[#ECE8F7] dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-[#6E63D9] to-[#72D49A] rounded-full transition-all" style="width: {{ $aiSummary['health_score'] }}%"></div>
                     </div>
                 </div>
 
-                <!-- Active Workload & Accomplishments -->
-                <div class="space-y-3 text-xs">
-                    <div>
-                        <h4 class="font-extrabold text-[#2F2F45] dark:text-white mb-1">🎉 Recent Accomplishments:</h4>
-                        <ul class="list-disc pl-5 space-y-1 text-[#7A7A92] dark:text-slate-300 font-medium">
-                            @foreach($aiSummary['completed_tasks'] as $ct)
-                                <li>{{ $ct }}</li>
+                <!-- Bottlenecks Alert -->
+                @if(count($aiSummary['bottlenecks']) > 0)
+                    <div class="p-3.5 rounded-2xl bg-[#FF6B81]/10 border border-[#FF6B81]/30 text-xs text-[#FF6B81] space-y-1">
+                        <span class="font-extrabold block">⚠️ Identified Bottlenecks:</span>
+                        <ul class="list-disc list-inside space-y-0.5 font-semibold text-[11px]">
+                            @foreach($aiSummary['bottlenecks'] as $b)
+                                <li>{{ $b }}</li>
                             @endforeach
                         </ul>
                     </div>
+                @endif
 
-                    <div>
-                        <h4 class="font-extrabold text-[#2F2F45] dark:text-white mb-1">🔥 Active Workload (In Progress & Review):</h4>
-                        <ul class="list-disc pl-5 space-y-1 text-[#7A7A92] dark:text-slate-300 font-medium">
-                            @foreach($aiSummary['active_workload'] as $aw)
-                                <li>{{ $aw }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-
-                    @if(!empty($aiSummary['bottlenecks']))
-                        <div>
-                            <h4 class="font-extrabold text-[#FF6B81] mb-1">⚠️ Urgent Blockers & Bottlenecks:</h4>
-                            <ul class="list-disc pl-5 space-y-1 text-[#FF6B81] font-semibold">
-                                @foreach($aiSummary['bottlenecks'] as $bn)
-                                    <li>{{ $bn }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
+                <!-- Recommendation Box -->
+                <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-300 space-y-1">
+                    <span class="font-extrabold block">💡 AI Recommendation:</span>
+                    <p class="font-medium text-[11px] leading-relaxed">{{ $aiSummary['recommendation'] }}</p>
                 </div>
 
-                <div class="pt-2 border-t border-[#ECE8F7] dark:border-[#2A2645] flex justify-end">
-                    <button wire:click="$set('showAiStandupModal', false)" class="px-5 py-2 rounded-full bg-[#6E63D9] text-[#ffffff] text-xs font-bold shadow-button">
-                        Close Summary
-                    </button>
-                </div>
+                <button wire:click="$set('showAiStandupModal', false)" class="w-full py-2.5 rounded-full bg-[#6E63D9] text-white font-bold text-xs shadow-button hover:bg-[#5C52C7] transition-all">
+                    Dismiss Summary
+                </button>
             </div>
         </div>
     @endif
 
     <!-- KEYBOARD SHORTCUTS MODAL -->
     @if($showShortcutsModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#12101F]/60 backdrop-blur-md animate-fadeIn">
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#12101F]/60 backdrop-blur-md animate-fadeIn" @click.outside="showShortcutsModal = false">
             <div class="bg-white dark:bg-[#1B182E] max-w-md w-full rounded-[24px] border border-[#ECE8F7] dark:border-[#2A2645] p-6 shadow-2xl space-y-4">
                 <div class="flex items-center justify-between border-b border-[#ECE8F7] dark:border-[#2A2645] pb-3">
-                    <div class="flex items-center gap-3">
-                        <div class="p-2 rounded-2xl bg-[#6E63D9]/10 text-[#6E63D9] font-black text-base">
-                            ⌨️
-                        </div>
-                        <h3 class="text-base font-extrabold text-[#2F2F45] dark:text-white">Keyboard Hotkeys</h3>
-                    </div>
-                    <button wire:click="$set('showShortcutsModal', false)" class="p-1 text-[#7A7A92] hover:text-[#2F2F45]">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <h3 class="text-base font-extrabold text-[#2F2F45] dark:text-white">Keyboard Shortcuts</h3>
+                    <button wire:click="$set('showShortcutsModal', false)" class="p-1.5 rounded-full text-[#7A7A92] hover:bg-[#ECE8F7]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
 
                 <div class="space-y-2.5 text-xs">
-                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#F8F5FF] dark:bg-[#25203D]">
+                    <div class="flex justify-between items-center p-2.5 rounded-xl bg-[#F8F5FF] dark:bg-[#25203D]">
                         <span class="font-bold text-[#2F2F45] dark:text-white">Create New Task</span>
-                        <kbd class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-[#ECE8F7] dark:border-slate-700 font-extrabold text-[#6E63D9]">N</kbd>
+                        <kbd class="px-2 py-1 rounded bg-white dark:bg-[#1B182E] font-black text-[#6E63D9] border border-[#ECE8F7]">N</kbd>
                     </div>
-
-                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#F8F5FF] dark:bg-[#25203D]">
-                        <span class="font-bold text-[#2F2F45] dark:text-white">Focus Search Input</span>
-                        <kbd class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-[#ECE8F7] dark:border-slate-700 font-extrabold text-[#6E63D9]">/</kbd>
+                    <div class="flex justify-between items-center p-2.5 rounded-xl bg-[#F8F5FF] dark:bg-[#25203D]">
+                        <span class="font-bold text-[#2F2F45] dark:text-white">Focus Search Bar</span>
+                        <kbd class="px-2 py-1 rounded bg-white dark:bg-[#1B182E] font-black text-[#6E63D9] border border-[#ECE8F7]">/</kbd>
                     </div>
-
-                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#F8F5FF] dark:bg-[#25203D]">
+                    <div class="flex justify-between items-center p-2.5 rounded-xl bg-[#F8F5FF] dark:bg-[#25203D]">
                         <span class="font-bold text-[#2F2F45] dark:text-white">Toggle Keyboard Shortcuts</span>
-                        <kbd class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-[#ECE8F7] dark:border-slate-700 font-extrabold text-[#6E63D9]">?</kbd>
+                        <kbd class="px-2 py-1 rounded bg-white dark:bg-[#1B182E] font-black text-[#6E63D9] border border-[#ECE8F7]">?</kbd>
                     </div>
-
-                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#F8F5FF] dark:bg-[#25203D]">
-                        <span class="font-bold text-[#2F2F45] dark:text-white">Close Open Modal</span>
-                        <kbd class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-[#ECE8F7] dark:border-slate-700 font-extrabold text-[#6E63D9]">Esc</kbd>
+                    <div class="flex justify-between items-center p-2.5 rounded-xl bg-[#F8F5FF] dark:bg-[#25203D]">
+                        <span class="font-bold text-[#2F2F45] dark:text-white">Close Open Modals</span>
+                        <kbd class="px-2.5 py-1 rounded bg-white dark:bg-[#1B182E] font-black text-[#6E63D9] border border-[#ECE8F7]">Esc</kbd>
                     </div>
-                </div>
-
-                <div class="pt-2 border-t border-[#ECE8F7] dark:border-[#2A2645] flex justify-end">
-                    <button wire:click="$set('showShortcutsModal', false)" class="px-5 py-2 rounded-full bg-[#6E63D9] text-white text-xs font-bold shadow-button">
-                        Got it!
-                    </button>
                 </div>
             </div>
         </div>
     @endif
 
-    <!-- Task Modal (Create & Edit) -->
+    <!-- TASK MODAL -->
     @if($showTaskModal)
         @livewire('task-modal', [
             'taskId' => $editingTaskId,
@@ -530,82 +571,316 @@
         ], key('task-modal-'.($editingTaskId ?? 'new')))
     @endif
 
-    <!-- Delete Confirmation Modal -->
+    <!-- DELETE TASK CONFIRMATION MODAL -->
     @if($showDeleteModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#12101F]/60 backdrop-blur-md animate-fadeIn">
-            <div class="bg-white dark:bg-[#1B182E] max-w-md w-full rounded-[20px] border border-[#ECE8F7] dark:border-[#2A2645] p-6 shadow-soft-card space-y-4">
-                <div class="w-12 h-12 rounded-full bg-[#FF6B81]/15 text-[#FF6B81] flex items-center justify-center mx-auto">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            <div class="bg-white dark:bg-[#1B182E] max-w-sm w-full rounded-[24px] border border-[#ECE8F7] dark:border-[#2A2645] p-6 shadow-2xl text-center space-y-4">
+                <div class="w-14 h-14 rounded-2xl bg-[#FF6B81]/15 text-[#FF6B81] flex items-center justify-center mx-auto text-xl font-black">
+                    🗑️
                 </div>
-                <div class="text-center">
-                    <h3 class="text-lg font-extrabold text-[#2F2F45] dark:text-white">Delete Task?</h3>
-                    <p class="text-xs text-[#7A7A92] dark:text-[#A8A3C7] mt-1">Are you sure you want to delete this task? This action cannot be undone.</p>
+                <div>
+                    <h3 class="text-base font-extrabold text-[#2F2F45] dark:text-white">Delete Task?</h3>
+                    <p class="text-xs text-[#7A7A92] mt-1 font-medium">This action cannot be undone. Task comments & attachments will also be permanently deleted.</p>
                 </div>
-                <div class="flex items-center gap-3 pt-2">
-                    <button wire:click="$set('showDeleteModal', false)" class="flex-1 py-2.5 px-4 rounded-full bg-[#F8F5FF] dark:bg-[#25203D] text-[#7A7A92] dark:text-slate-300 text-xs font-bold transition-all">
+                <div class="flex justify-center gap-3 pt-2">
+                    <button wire:click="$set('showDeleteModal', false)" class="px-5 py-2 rounded-full bg-[#ECE8F7] dark:bg-[#25203D] text-[#7A7A92] font-bold text-xs hover:bg-[#DDD8F0]">
                         Cancel
                     </button>
-                    <button wire:click="deleteTaskConfirmed" class="flex-1 py-2.5 px-4 rounded-full bg-[#FF6B81] hover:bg-[#E85B71] text-white text-xs font-bold shadow-md transition-all">
-                        Delete
+                    <button wire:click="deleteTaskConfirmed" class="px-5 py-2 rounded-full bg-[#FF6B81] text-white font-bold text-xs shadow-button hover:bg-[#E5576D]">
+                        Yes, Delete
                     </button>
                 </div>
             </div>
         </div>
     @endif
 
-    <!-- Activity Log Slide-Over Drawer -->
-    @if($showActivityDrawer)
-        <div class="fixed inset-0 z-50 overflow-hidden">
-            <div wire:click="$set('showActivityDrawer', false)" class="absolute inset-0 bg-[#12101F]/40 backdrop-blur-xs"></div>
-            <div class="absolute inset-y-0 right-0 max-w-full flex pl-10">
-                <div class="w-screen max-w-md bg-white dark:bg-[#1B182E] border-l border-[#ECE8F7] dark:border-[#2A2645] shadow-2xl flex flex-col">
-                    <div class="p-6 border-b border-[#ECE8F7] dark:border-[#2A2645] flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="p-2 rounded-2xl bg-[#6E63D9]/10 text-[#6E63D9]">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            </div>
-                            <h2 class="text-base font-extrabold text-[#2F2F45] dark:text-white">Activity Log</h2>
-                        </div>
-                        <button wire:click="$set('showActivityDrawer', false)" class="p-1.5 rounded-full text-[#7A7A92] hover:text-[#2F2F45]">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>
-                    </div>
-                    <div class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                        @forelse($recentActivities as $act)
-                            <div class="flex items-start gap-3 text-xs border-b border-[#ECE8F7] dark:border-[#2A2645] pb-3">
-                                <img src="{{ $act->user ? $act->user->avatar_url : 'https://ui-avatars.com/api/?name=User' }}" class="w-8 h-8 rounded-full object-cover shrink-0" alt="">
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center justify-between">
-                                        <span class="font-bold text-[#2F2F45] dark:text-white">{{ $act->user ? $act->user->name : 'System' }}</span>
-                                        <span class="text-[10px] font-semibold text-[#7A7A92] dark:text-[#A8A3C7]">{{ $act->created_at->diffForHumans() }}</span>
-                                    </div>
-                                    <p class="text-[#7A7A92] dark:text-slate-300 mt-0.5 leading-relaxed">{{ $act->description }}</p>
-                                </div>
-                            </div>
-                        @empty
-                            <p class="text-[#7A7A92] text-xs text-center py-8">No activity logs recorded yet.</p>
-                        @endforelse
+    <!-- ACTIVITY LOG DRAWER -->
+    <div 
+        x-data 
+        x-show="$wire.showActivityDrawer" 
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="translate-x-full"
+        x-transition:enter-end="translate-x-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="translate-x-full"
+        class="fixed inset-y-0 right-0 z-50 w-96 bg-white dark:bg-[#1B182E] border-l border-[#ECE8F7] dark:border-[#2A2645] shadow-2xl flex flex-col"
+    >
+        <div class="p-6 border-b border-[#ECE8F7] dark:border-[#2A2645] flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-lg">🔔</span>
+                <h3 class="text-base font-extrabold text-[#2F2F45] dark:text-white">Workspace Audit Trail</h3>
+            </div>
+            <button wire:click="$set('showActivityDrawer', false)" class="p-1.5 rounded-full text-[#7A7A92] hover:bg-[#ECE8F7]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+            @forelse($recentActivities as $act)
+                <div class="flex items-start gap-3 p-3 rounded-2xl bg-[#F8F5FF] dark:bg-[#25203D] border border-[#ECE8F7] dark:border-[#352F52]">
+                    <img src="{{ $act->user?->avatar_url ?? 'https://ui-avatars.com/api/?name=User' }}" class="w-8 h-8 rounded-full object-cover shrink-0 ring-2 ring-[#6E63D9]/20" alt="">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs font-bold text-[#2F2F45] dark:text-white leading-snug">
+                            <span class="text-[#6E63D9]">{{ $act->user?->name ?? 'System' }}</span> {{ $act->description }}
+                        </p>
+                        <span class="text-[10px] text-[#7A7A92] font-semibold mt-1 block">
+                            {{ $act->created_at->diffForHumans() }}
+                        </span>
                     </div>
                 </div>
-            </div>
+            @empty
+                <p class="text-center text-xs text-[#7A7A92] py-10 font-medium">No recent activity recorded.</p>
+            @endforelse
         </div>
-    @endif
+    </div>
 
-    <!-- Toast Notification Banner -->
+    <!-- TOAST MESSAGES -->
     @if(!empty($toastMessage))
         <div 
             x-data="{ show: true }" 
             x-show="show" 
             x-init="setTimeout(() => show = false, 3500)"
-            x-transition
-            class="fixed bottom-8 right-8 z-50 flex items-center gap-3 px-5 py-3.5 rounded-full bg-[#2F2F45] text-white shadow-2xl text-xs font-bold max-w-sm"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 translate-y-4"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 translate-y-4"
+            class="fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl text-white text-xs font-bold max-w-sm
+                {{ $toastMessage['type'] === 'success' ? 'bg-[#72D49A]' : ($toastMessage['type'] === 'error' ? 'bg-[#FF6B81]' : 'bg-[#6E63D9]') }}"
+            wire:key="toast-{{ $toastMessage['id'] ?? 0 }}"
         >
-            <div class="w-2.5 h-2.5 rounded-full bg-[#72D49A]"></div>
+            <span class="text-base">
+                {{ $toastMessage['type'] === 'success' ? '✅' : ($toastMessage['type'] === 'error' ? '⚠️' : 'ℹ️') }}
+            </span>
             <span>{{ $toastMessage['message'] }}</span>
-            <button @click="show = false" class="ml-auto text-white/70 hover:text-white">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
+        </div>
+    @endif
+
+    <!-- MANAGE PROJECT TEAM MEMBERS MODAL -->
+    @if($showTeamModal)
+        <div 
+            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style="background: rgba(18,16,31,0.6); backdrop-filter: blur(8px);"
+        >
+            <div class="w-full max-w-md rounded-[24px] bg-white dark:bg-[#1C1830] border border-[#ECE8F7] dark:border-[#2A2545] shadow-2xl p-6 space-y-4">
+                <div class="flex items-center justify-between border-b border-[#ECE8F7] dark:border-[#2A2545] pb-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-10 h-10 rounded-2xl bg-[#6E63D9]/10 text-[#6E63D9] flex items-center justify-center text-lg font-bold">
+                            👥
+                        </div>
+                        <div>
+                            <h3 class="text-base font-extrabold text-[#2F2F45] dark:text-white">Manage Project Team</h3>
+                            <p class="text-xs text-[#7A7A92]">Project: <span class="font-bold text-[#6E63D9]">{{ $project->name }}</span></p>
+                        </div>
+                    </div>
+                    <button wire:click="$set('showTeamModal', false)" class="p-1.5 rounded-full text-[#7A7A92] hover:bg-[#ECE8F7]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <div class="space-y-2 max-h-72 overflow-y-auto custom-scrollbar pr-1">
+                    @foreach($allUsers as $u)
+                        @php
+                            $isOwner = $project->created_by === $u->id;
+                            $isMem = $project->isMember($u->id);
+                        @endphp
+                        <div class="flex items-center justify-between p-3 rounded-2xl bg-[#F8F5FF] dark:bg-[#25203D] border border-[#ECE8F7] dark:border-[#352F52]">
+                            <div class="flex items-center gap-3">
+                                <img src="{{ $u->avatar_url }}" class="w-8 h-8 rounded-full object-cover ring-2 ring-[#6E63D9]/20" alt="">
+                                <div>
+                                    <h4 class="text-xs font-bold text-[#2F2F45] dark:text-white flex items-center gap-1.5">
+                                        <span>{{ $u->name }}</span>
+                                        @if($isOwner)
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-[#6E63D9]/15 text-[#6E63D9]">Owner</span>
+                                        @endif
+                                    </h4>
+                                    <p class="text-[10px] text-[#7A7A92]">{{ $u->email }}</p>
+                                </div>
+                            </div>
+
+                            @if(!$isOwner)
+                                <button 
+                                    wire:click="toggleProjectMember({{ $u->id }})"
+                                    class="px-3 py-1.5 rounded-full text-xs font-bold transition-all {{ $isMem ? 'bg-rose-50 text-[#FF6B81] hover:bg-rose-100' : 'bg-[#6E63D9] text-white hover:bg-[#5C52C7]' }}"
+                                >
+                                    {{ $isMem ? 'Remove' : '+ Add' }}
+                                </button>
+                            @else
+                                <span class="text-xs font-extrabold text-[#7A7A92] px-3 py-1">Owner</span>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="pt-2 border-t border-[#ECE8F7] dark:border-[#2A2545] flex justify-end">
+                    <button wire:click="$set('showTeamModal', false)" class="px-5 py-2 rounded-full bg-[#6E63D9] text-white text-xs font-bold shadow-button">
+                        Done
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- VISUAL PROJECT ANALYTICS MODAL -->
+    @if($showAnalyticsModal)
+        @php
+            $analytics = $this->getAnalyticsData();
+        @endphp
+        <div 
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
+            style="background: rgba(18,16,31,0.65); backdrop-filter: blur(8px);"
+            x-data="{
+                initCharts() {
+                    this.$nextTick(() => {
+                        // Status Doughnut Chart
+                        const statusCtx = document.getElementById('statusChart');
+                        if (statusCtx) {
+                            new Chart(statusCtx, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: Object.keys({{ json_encode($analytics['status']) }}),
+                                    datasets: [{
+                                        data: Object.values({{ json_encode($analytics['status']) }}),
+                                        backgroundColor: ['#6E63D9', '#3B82F6', '#FFC857', '#A98BEF', '#72D49A'],
+                                        borderWidth: 0,
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } } }
+                                }
+                            });
+                        }
+
+                        // Priority Bar Chart
+                        const prioCtx = document.getElementById('priorityChart');
+                        if (prioCtx) {
+                            new Chart(prioCtx, {
+                                type: 'bar',
+                                data: {
+                                    labels: Object.keys({{ json_encode($analytics['priority']) }}),
+                                    datasets: [{
+                                        label: 'Tasks',
+                                        data: Object.values({{ json_encode($analytics['priority']) }}),
+                                        backgroundColor: ['#FF6B81', '#F59E0B', '#3B82F6', '#94A3B8'],
+                                        borderRadius: 8,
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { display: false } },
+                                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                                }
+                            });
+                        }
+                    });
+                }
+            }"
+            x-init="initCharts()"
+        >
+            <!-- Script Chart.js CDN -->
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+            <div class="w-full max-w-4xl rounded-[28px] bg-white dark:bg-[#1C1830] border border-[#ECE8F7] dark:border-[#2A2545] shadow-2xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between border-b border-[#ECE8F7] dark:border-[#2A2545] pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#6E63D9] to-[#8675E6] text-white flex items-center justify-center text-xl font-bold shadow-button">
+                            📊
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-extrabold text-[#2F2F45] dark:text-white tracking-tight">Project Analytics & Workload</h2>
+                            <p class="text-xs text-[#7A7A92] font-medium">Real-time metrics, task velocity, and team workload distribution.</p>
+                        </div>
+                    </div>
+                    <button wire:click="$set('showAnalyticsModal', false)" class="p-2 rounded-full text-[#7A7A92] hover:bg-[#ECE8F7] dark:hover:bg-[#25203D]">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <!-- Top Metric Cards Row -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="p-4 rounded-2xl bg-[#F8F5FF] dark:bg-[#25203D] border border-[#ECE8F7] dark:border-[#352F52]">
+                        <span class="text-[11px] font-bold text-[#7A7A92] block mb-1">Total Active Tasks</span>
+                        <span class="text-xl font-black text-[#2F2F45] dark:text-white">{{ array_sum($analytics['status']) }}</span>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-[#72D49A]/10 border border-[#72D49A]/30">
+                        <span class="text-[11px] font-bold text-emerald-600 block mb-1">Completed Tasks</span>
+                        <span class="text-xl font-black text-emerald-600 dark:text-emerald-400">{{ $analytics['status']['Done'] ?? 0 }}</span>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-[#6E63D9]/10 border border-[#6E63D9]/30">
+                        <span class="text-[11px] font-bold text-[#6E63D9] block mb-1">Total Estimated</span>
+                        <span class="text-xl font-black text-[#6E63D9] dark:text-[#A98BEF]">{{ $analytics['total_estimated'] }} hrs</span>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30">
+                        <span class="text-[11px] font-bold text-amber-600 block mb-1">Total Spent / Logged</span>
+                        <span class="text-xl font-black text-amber-600 dark:text-amber-400">{{ $analytics['total_actual'] }} hrs</span>
+                    </div>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Status Distribution Doughnut Chart -->
+                    <div class="p-5 rounded-2xl bg-[#F8F5FF] dark:bg-[#25203D] border border-[#ECE8F7] dark:border-[#352F52] space-y-3">
+                        <h4 class="text-xs font-extrabold text-[#2F2F45] dark:text-white flex items-center gap-2">
+                            <span>📌</span> Status Breakdown
+                        </h4>
+                        <div class="h-56 relative">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Priority Distribution Bar Chart -->
+                    <div class="p-5 rounded-2xl bg-[#F8F5FF] dark:bg-[#25203D] border border-[#ECE8F7] dark:border-[#352F52] space-y-3">
+                        <h4 class="text-xs font-extrabold text-[#2F2F45] dark:text-white flex items-center gap-2">
+                            <span>🚨</span> Priority Distribution
+                        </h4>
+                        <div class="h-56 relative">
+                            <canvas id="priorityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Workload Distribution Table -->
+                <div class="p-5 rounded-2xl bg-[#F8F5FF] dark:bg-[#25203D] border border-[#ECE8F7] dark:border-[#352F52] space-y-3">
+                    <h4 class="text-xs font-extrabold text-[#2F2F45] dark:text-white flex items-center gap-2">
+                        <span>👥</span> Team Workload & Logged Hours
+                    </h4>
+                    <div class="space-y-2">
+                        @foreach($analytics['assignees'] as $name => $data)
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-[#1C1830] border border-[#ECE8F7] dark:border-[#2A2545] text-xs">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-[#6E63D9]/10 text-[#6E63D9] font-black flex items-center justify-center text-xs">
+                                        {{ strtoupper(substr($name, 0, 1)) }}
+                                    </div>
+                                    <span class="font-extrabold text-[#2F2F45] dark:text-white">{{ $name }}</span>
+                                </div>
+                                <div class="flex items-center gap-4 text-xs font-bold">
+                                    <span class="px-2.5 py-1 rounded-full bg-[#6E63D9]/10 text-[#6E63D9]">{{ $data['tasks'] }} Tasks</span>
+                                    <span class="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600">⏱️ {{ round($data['hours'], 1) }} hrs</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="pt-3 border-t border-[#ECE8F7] dark:border-[#2A2545] flex justify-end">
+                    <button wire:click="$set('showAnalyticsModal', false)" class="px-6 py-2.5 rounded-full bg-[#6E63D9] text-white font-bold text-xs shadow-button hover:bg-[#5C52C7] transition-all">
+                        Close Analytics
+                    </button>
+                </div>
+            </div>
         </div>
     @endif
 
 </div>
+

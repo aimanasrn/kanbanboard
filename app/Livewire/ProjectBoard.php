@@ -37,6 +37,8 @@ class ProjectBoard extends Component
     public bool $showAiStandupModal = false;
     public bool $showShortcutsModal = false;
     public bool $showProfileModal = false;
+    public bool $showTeamModal = false;
+    public bool $showAnalyticsModal = false;
 
     public bool $showDeleteModal = false;
     public ?int $taskToDeleteId = null;
@@ -52,14 +54,28 @@ class ProjectBoard extends Component
 
     public function mount(?int $projectId = null): void
     {
-        $project = $projectId ? Project::find($projectId) : Project::first();
+        if ($projectId) {
+            $project = Project::find($projectId);
+        } else {
+            // Default: redirect to project dashboard if no project specified
+            $project = Project::latest()->first();
+        }
+
         if ($project) {
             $this->projectId = $project->id;
+        } else {
+            $this->redirect(route('projects.index'));
+            return;
         }
 
         $now = Carbon::now();
         $this->calendarMonth = $now->month;
         $this->calendarYear = $now->year;
+    }
+
+    public function switchProject(int $projectId): void
+    {
+        $this->redirect(route('project.show', $projectId));
     }
 
     #[On('open-profile-modal')]
@@ -79,6 +95,66 @@ class ProjectBoard extends Component
     {
         $this->showProfileModal = false;
         $this->showToast($message, 'success');
+    }
+
+    #[On('show-toast')]
+    public function handleShowToast(string $message, string $type = 'success'): void
+    {
+        $this->showToast($message, $type);
+    }
+
+    public function toggleProjectMember(int $userId): void
+    {
+        $project = Project::findOrFail($this->projectId);
+
+        if ($project->members()->where('user_id', $userId)->exists()) {
+            $project->members()->detach($userId);
+            $this->showToast("Removed member from project team", 'info');
+        } else {
+            $project->members()->attach($userId);
+            $this->showToast("Added member to project team", 'success');
+        }
+    }
+
+    public function getAnalyticsData(): array
+    {
+        $tasks = Task::where('project_id', $this->projectId)
+            ->where('is_archived', false)
+            ->with('assignee')
+            ->get();
+
+        $statusData = [
+            'Backlog' => $tasks->where('status', 'backlog')->count(),
+            'To Do' => $tasks->where('status', 'todo')->count(),
+            'In Progress' => $tasks->where('status', 'in_progress')->count(),
+            'Review' => $tasks->where('status', 'review')->count(),
+            'Done' => $tasks->where('status', 'done')->count(),
+        ];
+
+        $priorityData = [
+            'Urgent' => $tasks->where('priority', 'urgent')->count(),
+            'High' => $tasks->where('priority', 'high')->count(),
+            'Medium' => $tasks->where('priority', 'medium')->count(),
+            'Low' => $tasks->where('priority', 'low')->count(),
+        ];
+
+        $assigneeMap = [];
+        foreach ($tasks as $t) {
+            $name = $t->assignee ? $t->assignee->name : 'Unassigned';
+            if (!isset($assigneeMap[$name])) {
+                $assigneeMap[$name] = ['tasks' => 0, 'hours' => 0];
+            }
+            $assigneeMap[$name]['tasks']++;
+            $assigneeMap[$name]['hours'] += ($t->actual_hours ?? 0);
+        }
+
+        return [
+            'status' => $statusData,
+            'priority' => $priorityData,
+            'assignees' => $assigneeMap,
+            'total_estimated' => round($tasks->sum('estimated_hours'), 1),
+            'total_actual' => round($tasks->sum('actual_hours'), 1),
+        ];
     }
 
     public function prevCalendarMonth(): void
@@ -213,7 +289,7 @@ class ProjectBoard extends Component
 
                 ActivityLog::create([
                     'project_id' => $task->project_id,
-                    'user_id' => $task->assigned_to ?? $task->created_by,
+                    'user_id' => auth()->id() ?? $task->assigned_to ?? $task->created_by,
                     'action' => 'deleted',
                     'description' => "Deleted task \"{$title}\"",
                 ]);
@@ -249,7 +325,7 @@ class ProjectBoard extends Component
     #[On('reorder-task')]
     public function updateTaskOrder(int $taskId, string $newStatus, int $newPosition): void
     {
-        $this->taskService->reorderTask($taskId, $newStatus, $newPosition);
+        $this->taskService->reorderTask($taskId, $newStatus, $newPosition, auth()->id());
         $this->dispatch('refresh-board');
         $this->showToast("Updated task position", 'success');
     }

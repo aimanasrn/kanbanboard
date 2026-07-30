@@ -29,6 +29,9 @@ class TaskModal extends Component
     public string $priority = 'medium';
     public ?string $due_date = null;
     public ?int $assigned_to = null;
+    public ?float $estimated_hours = null;
+    public ?float $actual_hours = null;
+    public ?string $recurring_frequency = null;
 
     // Checklists transient & persisted state
     public array $checklists = [];
@@ -59,6 +62,9 @@ class TaskModal extends Component
             $this->priority = $task->priority;
             $this->due_date = $task->due_date ? $task->due_date->format('Y-m-d\TH:i') : null;
             $this->assigned_to = $task->assigned_to;
+            $this->estimated_hours = $task->estimated_hours;
+            $this->actual_hours = $task->actual_hours;
+            $this->recurring_frequency = $task->recurring_frequency;
             $this->labels = $task->labels->toArray();
             $this->checklists = $task->checklists->toArray();
         } else {
@@ -76,6 +82,9 @@ class TaskModal extends Component
         $this->priority = 'medium';
         $this->due_date = null;
         $this->assigned_to = null;
+        $this->estimated_hours = null;
+        $this->actual_hours = null;
+        $this->recurring_frequency = null;
         $this->checklists = [];
         $this->labels = [];
         $this->newAttachments = [];
@@ -88,7 +97,7 @@ class TaskModal extends Component
             return;
         }
 
-        $currentUser = User::first();
+        $currentUser = auth()->user();
 
         if ($this->taskId) {
             $maxPos = TaskChecklist::where('task_id', $this->taskId)->max('position') ?? 0;
@@ -122,7 +131,7 @@ class TaskModal extends Component
     {
         if (isset($this->checklists[$index])) {
             $this->checklists[$index]['completed'] = !$this->checklists[$index]['completed'];
-            $currentUser = User::first();
+            $currentUser = auth()->user();
 
             if (!empty($this->checklists[$index]['id'])) {
                 TaskChecklist::where('id', $this->checklists[$index]['id'])
@@ -194,7 +203,7 @@ class TaskModal extends Component
             return;
         }
 
-        $currentUser = User::first();
+        $currentUser = auth()->user();
 
         foreach ($this->newAttachments as $file) {
             $path = $file->store('attachments', 'public');
@@ -234,7 +243,7 @@ class TaskModal extends Component
     {
         $this->validate();
 
-        $currentUser = User::first();
+        $currentUser = auth()->user();
 
         if ($this->taskId) {
             $task = Task::findOrFail($this->taskId);
@@ -247,6 +256,9 @@ class TaskModal extends Component
                 'priority' => $this->priority,
                 'due_date' => $this->due_date ? $this->due_date : null,
                 'assigned_to' => $this->assigned_to,
+                'estimated_hours' => $this->estimated_hours ? (float) $this->estimated_hours : null,
+                'actual_hours' => $this->actual_hours ? (float) $this->actual_hours : null,
+                'recurring_frequency' => $this->recurring_frequency ? $this->recurring_frequency : null,
                 'completed_at' => ($this->status === 'done' && !$task->completed_at) ? now() : ($this->status !== 'done' ? null : $task->completed_at),
             ]);
 
@@ -276,6 +288,9 @@ class TaskModal extends Component
                 'priority' => $this->priority,
                 'due_date' => $this->due_date ? $this->due_date : null,
                 'assigned_to' => $this->assigned_to,
+                'estimated_hours' => $this->estimated_hours ? (float) $this->estimated_hours : null,
+                'actual_hours' => $this->actual_hours ? (float) $this->actual_hours : null,
+                'recurring_frequency' => $this->recurring_frequency ? $this->recurring_frequency : null,
                 'created_by' => $currentUser->id,
                 'completed_at' => $this->status === 'done' ? now() : null,
             ]);

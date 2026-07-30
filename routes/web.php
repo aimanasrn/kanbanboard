@@ -4,6 +4,7 @@ use App\Http\Controllers\GithubWebhookController;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\ProjectBoard;
+use App\Livewire\ProjectManager;
 use App\Models\Project;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -24,7 +25,11 @@ Route::post('/logout', function () {
 
 // Protected Workspace Routes (Auth Required)
 Route::middleware('auth')->group(function () {
-    Route::get('/', ProjectBoard::class)->name('home');
+    // Project dashboard — lists all projects
+    Route::get('/', ProjectManager::class)->name('home');
+    Route::get('/projects', ProjectManager::class)->name('projects.index');
+
+    // Individual project board
     Route::get('/project/{projectId}', ProjectBoard::class)->name('project.show');
 });
 

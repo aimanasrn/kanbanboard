@@ -19,7 +19,7 @@ class CommentSection extends Component
             return;
         }
 
-        $currentUser = User::first(); // Active demo user
+        $currentUser = auth()->user();
         $task = Task::findOrFail($this->taskId);
 
         $comment = TaskComment::create([
@@ -56,7 +56,7 @@ class CommentSection extends Component
             ->latest()
             ->get();
 
-        $activeUser = User::first();
+        $activeUser = auth()->user();
 
         return view('livewire.comment-section', [
             'comments' => $comments,

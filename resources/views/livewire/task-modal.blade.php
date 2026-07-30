@@ -142,6 +142,43 @@
                             class="w-full px-4 py-2.5 rounded-2xl bg-[#F8F5FF] dark:bg-[#25203D] border border-[#ECE8F7] dark:border-[#352F52] text-[#2F2F45] dark:text-white text-xs font-bold focus:outline-none focus:border-[#6E63D9]"
                         />
                     </div>
+
+                    <!-- Estimated Hours -->
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-[#2F2F45] dark:text-slate-300">Estimated Hours (hrs)</label>
+                        <input 
+                            type="number" 
+                            step="0.5"
+                            min="0"
+                            wire:model="estimated_hours" 
+                            placeholder="e.g. 4.5"
+                            class="w-full px-4 py-2.5 rounded-2xl bg-[#F8F5FF] dark:bg-[#25203D] border border-[#ECE8F7] dark:border-[#352F52] text-[#2F2F45] dark:text-white text-xs font-bold focus:outline-none focus:border-[#6E63D9]"
+                        />
+                    </div>
+
+                    <!-- Spent / Actual Hours -->
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-[#2F2F45] dark:text-slate-300">Spent Hours (hrs)</label>
+                        <input 
+                            type="number" 
+                            step="0.5"
+                            min="0"
+                            wire:model="actual_hours" 
+                            placeholder="e.g. 3.0"
+                            class="w-full px-4 py-2.5 rounded-2xl bg-[#F8F5FF] dark:bg-[#25203D] border border-[#ECE8F7] dark:border-[#352F52] text-[#2F2F45] dark:text-white text-xs font-bold focus:outline-none focus:border-[#6E63D9]"
+                        />
+                    </div>
+
+                    <!-- Recurring Frequency -->
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-[#2F2F45] dark:text-slate-300">Repeat Task 🔄</label>
+                        <select wire:model="recurring_frequency" class="w-full px-4 py-2.5 rounded-2xl bg-[#F8F5FF] dark:bg-[#25203D] border border-[#ECE8F7] dark:border-[#352F52] text-[#2F2F45] dark:text-white text-xs font-bold focus:outline-none focus:border-[#6E63D9]">
+                            <option value="">Do Not Repeat</option>
+                            <option value="daily">Every Day (Daily)</option>
+                            <option value="weekly">Every Week (Weekly)</option>
+                            <option value="monthly">Every Month (Monthly)</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Labels Manager Section -->
